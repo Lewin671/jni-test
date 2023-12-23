@@ -11,6 +11,7 @@
 #include "android/log.h"
 #include <unordered_map>
 #include <filesystem>
+#include <chrono>
 
 namespace fs = std::__fs::filesystem;
 
@@ -35,6 +36,8 @@ public:
     static bool create_directories_if_not_exists(const std::string &path);
 
     static std::string convertJByteArrayToString(JNIEnv *env, jbyteArray byteArray);
+
+    static long getCurrentTimeMilliSeconds();
 
 };
 

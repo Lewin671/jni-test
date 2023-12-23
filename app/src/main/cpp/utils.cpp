@@ -134,3 +134,10 @@ std::string utils::convertJByteArrayToString(JNIEnv *env, jbyteArray byteArray) 
     env->ReleaseByteArrayElements(byteArray, bytes, JNI_ABORT);
     return result;
 }
+
+long utils::getCurrentTimeMilliSeconds() {
+    std::chrono::milliseconds ms = std::chrono::duration_cast<std::chrono::milliseconds>(
+            std::chrono::system_clock::now().time_since_epoch()
+    );
+    return ms.count();
+}
