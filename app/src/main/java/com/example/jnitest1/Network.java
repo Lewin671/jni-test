@@ -13,6 +13,8 @@ public class Network {
 
     public static Response sendRequest(Request request) {
         HttpURLConnection connection = null;
+        InputStream inputStream = null;
+        ByteArrayOutputStream outputStream = null;
         try {
             // 创建 URL 对象
             URL url = new URL(request.url);
@@ -31,16 +33,18 @@ public class Network {
             int responseCode = connection.getResponseCode();
             String statusCode = Integer.toString(responseCode);
 
-            // 获取 MIME 类型
-//            String mimeType = connection.getContentType();
-
             // 读取响应体
-            InputStream inputStream = connection.getInputStream();
-            ByteArrayOutputStream outputStream = new ByteArrayOutputStream();
+            inputStream = connection.getInputStream();
+            outputStream = new ByteArrayOutputStream();
             byte[] buffer = new byte[2048];
             int bytesRead;
+            int total = 0;
             while ((bytesRead = inputStream.read(buffer)) != -1) {
                 outputStream.write(buffer, 0, bytesRead);
+                total += bytesRead;
+                if (total >= 10 * 1024) {
+                    throw new RuntimeException("file is too large to request");
+                }
             }
             byte[] bytes = outputStream.toByteArray();
 
@@ -67,8 +71,20 @@ public class Network {
             if (connection != null) {
                 connection.disconnect();
             }
+            if (inputStream != null) {
+                try {
+                    inputStream.close();
+                } catch (IOException e) {
+                    e.printStackTrace();
+                }
+            }
+            if (outputStream != null) {
+                try {
+                    outputStream.close();
+                } catch (IOException e) {
+                    e.printStackTrace();
+                }
+            }
         }
     }
-
-
 }
