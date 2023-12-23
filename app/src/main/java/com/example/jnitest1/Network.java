@@ -11,6 +11,8 @@ import java.util.Map;
 
 public class Network {
 
+    private static final long SIZE_LIMIT = 10 * 1024 * 1024;
+
     public static Response sendRequest(Request request) {
         HttpURLConnection connection = null;
         InputStream inputStream = null;
@@ -42,7 +44,7 @@ public class Network {
             while ((bytesRead = inputStream.read(buffer)) != -1) {
                 outputStream.write(buffer, 0, bytesRead);
                 total += bytesRead;
-                if (total >= 10 * 1024) {
+                if (total >= SIZE_LIMIT) {
                     throw new RuntimeException("file is too large to request");
                 }
             }
