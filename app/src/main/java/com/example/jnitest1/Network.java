@@ -37,7 +37,7 @@ public class Network {
             // 读取响应体
             InputStream inputStream = connection.getInputStream();
             ByteArrayOutputStream outputStream = new ByteArrayOutputStream();
-            byte[] buffer = new byte[1024];
+            byte[] buffer = new byte[2048];
             int bytesRead;
             while ((bytesRead = inputStream.read(buffer)) != -1) {
                 outputStream.write(buffer, 0, bytesRead);
@@ -59,9 +59,9 @@ public class Network {
 
             // 创建并返回 Response 对象
             return new Response(simplifiedHeaders, statusCode, bytes);
-        } catch (IOException e) {
+        } catch (Throwable throwable) {
             // 处理异常
-            e.printStackTrace();
+            throwable.printStackTrace();
             return null;
         } finally {
             if (connection != null) {

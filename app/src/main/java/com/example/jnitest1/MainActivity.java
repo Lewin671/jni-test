@@ -9,9 +9,11 @@ import android.os.Bundle;
 import android.os.Handler;
 import android.os.Looper;
 import android.os.SystemClock;
+import android.text.TextUtils;
 import android.util.Log;
 import android.view.KeyEvent;
 import android.view.View;
+import android.webkit.MimeTypeMap;
 import android.webkit.WebResourceRequest;
 import android.webkit.WebResourceResponse;
 import android.webkit.WebView;
@@ -22,6 +24,7 @@ import com.example.jnitest1.databinding.ActivityMainBinding;
 
 import java.io.ByteArrayInputStream;
 import java.io.File;
+import java.nio.file.Paths;
 
 public class MainActivity extends AppCompatActivity {
 
@@ -63,14 +66,22 @@ public class MainActivity extends AppCompatActivity {
                     url = uri.toString();
                 }
 
-                if (url != null && (url.endsWith(".js") || url.endsWith(".css"))) {
+                String mimeType = getMimeType(url);
+                if (url != null && (!TextUtils.isEmpty(mimeType) || url.endsWith(".js"))) {
                     long start = SystemClock.uptimeMillis();
                     Response response = LocalCDNService.sendRequest(new Request(url, request.getRequestHeaders()));
                     long cost = SystemClock.uptimeMillis() - start;
                     if (response != null) {
-                        Log.e("myTag", "hit localCDN : " + cost + " fetchType=" + response.headers.get("fetchType") + " byteLen=" + response.bytes.length + " " + url);
-                        boolean isCss = url.endsWith(".css");
-                        String mimeType = isCss ? "text/css" : "text/javascript";
+
+                        Logger.Builder builder = Logger.build().event("hitLocalCDN")
+                                .append("fetchType", response.headers.get("fetchType"))
+                                .append("byteLen", response.bytes.length)
+                                .append("mimeType", mimeType)
+                                .append("cost", cost);
+                        if (mimeType == null) {
+                            builder.append("url", url);
+                        }
+                        builder.done();
                         WebResourceResponse webResourceResponse = new WebResourceResponse(mimeType, "UTF-8", new ByteArrayInputStream(response.bytes));
                         webResourceResponse.setResponseHeaders(response.headers);
                     }
@@ -109,6 +120,15 @@ public class MainActivity extends AppCompatActivity {
             }
         }
         return super.onKeyDown(keyCode, event);
+    }
+
+    private String getMimeType(String url) {
+        String type = null;
+        String extension = MimeTypeMap.getFileExtensionFromUrl(url);
+        if (extension != null) {
+            type = MimeTypeMap.getSingleton().getMimeTypeFromExtension(extension);
+        }
+        return type;
     }
 
     /**
