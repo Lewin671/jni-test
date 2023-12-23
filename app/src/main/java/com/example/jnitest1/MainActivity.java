@@ -72,15 +72,12 @@ public class MainActivity extends AppCompatActivity {
                     Response response = LocalCDNService.sendRequest(new Request(url, request.getRequestHeaders()));
                     long cost = SystemClock.uptimeMillis() - start;
                     if (response != null) {
-                        Logger.Builder builder = Logger.build().event("hitLocalCDN")
+                        Logger.build().event("hitLocalCDN")
                                 .append("fetchType", response.headers.get("fetchType"))
                                 .append("byteLen", response.bytes.length)
                                 .append("mimeType", mimeType)
-                                .append("cost", cost);
-                        if (mimeType == null) {
-                            builder.append("url", url);
-                        }
-                        builder.done();
+                                .append("cost", cost)
+                                .done();
                         WebResourceResponse webResourceResponse = new WebResourceResponse(mimeType, "UTF-8", new ByteArrayInputStream(response.bytes));
                         webResourceResponse.setResponseHeaders(response.headers);
                     } else {
