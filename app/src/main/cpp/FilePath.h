@@ -11,6 +11,10 @@
 #include <fstream>
 #include <string>
 #include <mutex>
+#include <filesystem>
+#include "utils.h"
+
+namespace fs = std::__fs::filesystem;
 
 class FilePath {
 private:
@@ -20,31 +24,12 @@ private:
 public:
     FilePath(const std::string &filePath) : path(filePath) {}
 
-    std::string read() {
-        std::lock_guard<std::mutex> lock(mtx);  // 获取锁
+    std::string read();
 
-        std::ifstream file(path);
-        if (!file.is_open()) {
-            throw std::runtime_error("Unable to open file: " + path);
-        }
 
-        std::string content((std::istreambuf_iterator<char>(file)),
-                            std::istreambuf_iterator<char>());
-        file.close();
-        return content;
-    }
+    void write(const std::string &content);
 
-    void write(const std::string &content) {
-        std::lock_guard<std::mutex> lock(mtx);  // 获取锁
-
-        std::ofstream file(path);
-        if (!file.is_open()) {
-            throw std::runtime_error("Unable to open file: " + path);
-        }
-
-        file << content;
-        file.close();
-    }
+    void remove();
 
     std::string getPath() const {
         return this->path;

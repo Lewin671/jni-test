@@ -20,7 +20,7 @@ public:
                         for (;;) {
                             std::function<void()> task;
                             {
-                                std::unique_lock <std::mutex> lock(this->queue_mutex);
+                                std::unique_lock<std::mutex> lock(this->queue_mutex);
                                 this->condition.wait(lock,
                                                      [this] {
                                                          return this->stop || !this->tasks.empty();
@@ -39,7 +39,7 @@ public:
     template<class F>
     void enqueue(F &&f) {
         {
-            std::unique_lock <std::mutex> lock(queue_mutex);
+            std::unique_lock<std::mutex> lock(queue_mutex);
             if (stop)
                 throw std::runtime_error("enqueue on stopped ThreadPool");
             tasks.emplace(std::forward<F>(f));
@@ -49,7 +49,7 @@ public:
 
     ~ThreadPool() {
         {
-            std::unique_lock <std::mutex> lock(queue_mutex);
+            std::unique_lock<std::mutex> lock(queue_mutex);
             stop = true;
         }
         condition.notify_all();
@@ -58,8 +58,8 @@ public:
     }
 
 private:
-    std::vector <std::thread> workers;
-    std::queue <std::function<void()>> tasks;
+    std::vector<std::thread> workers;
+    std::queue<std::function<void()>> tasks;
     std::mutex queue_mutex;
     std::condition_variable condition;
     bool stop;

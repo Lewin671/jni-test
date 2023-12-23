@@ -12,7 +12,12 @@ android {
         targetSdk 34
         versionCode 1
         versionName "1.0"
-
+        externalNativeBuild {
+            cmake {
+                // 添加 -g 选项以包含调试信息
+                arguments "-DCMAKE_CXX_FLAGS=-g"
+            }
+        }
         testInstrumentationRunner "androidx.test.runner.AndroidJUnitRunner"
     }
 

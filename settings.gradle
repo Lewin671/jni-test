@@ -13,5 +13,5 @@ dependencyResolutionManagement {
     }
 }
 
-rootProject.name = "JNITest1"
+rootProject.name = "localCDN"
 include ':app'

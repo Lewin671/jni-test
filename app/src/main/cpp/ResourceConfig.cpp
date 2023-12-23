@@ -4,3 +4,7 @@
 
 #include "ResourceConfig.h"
 ResourceConfig* ResourceConfig::GLOBAL_CONFIG = nullptr;
+
+const std::string &ResourceConfig::getRootDir() const {
+    return rootDir;
+}

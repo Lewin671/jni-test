@@ -6,6 +6,9 @@
 #define JNITEST1_RESOURCEITEM_H
 
 #include "FilePath.h"
+#include <filesystem>
+
+namespace fs = std::__fs::filesystem;
 
 class ResourceItem {
 private:
@@ -32,7 +35,12 @@ public:
         //todo: 转换成本地文件路径
         this->packageDir = packageDir;
         std::string fileName = urlToFilename(url);
-        this->filePath = std::make_unique<FilePath>(packageDir + fileName);
+
+        fs::path dirPath = packageDir;
+        fs::path fileNamePath = fileName;
+
+        fs::path combined = dirPath / fileNamePath;
+        this->filePath = std::make_unique<FilePath>(combined);
         this->originalUrl = url;
     }
 
@@ -40,6 +48,7 @@ public:
         if (filePath) {
             return filePath->read();
         }
+        return std::string{};
     }
 
     void write(const std::string &content) {
@@ -47,6 +56,8 @@ public:
             filePath->write(content);
         }
     }
+
+    void remove();
 
 
     const std::string getPackageDir() const {

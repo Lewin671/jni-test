@@ -3,3 +3,9 @@
 //
 
 #include "ResourceItem.h"
+
+void ResourceItem::remove() {
+    if (filePath != nullptr) {
+        filePath->remove();
+    }
+}

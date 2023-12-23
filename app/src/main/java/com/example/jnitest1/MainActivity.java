@@ -1,14 +1,26 @@
 package com.example.jnitest1;
 
+import androidx.annotation.Nullable;
+import androidx.appcompat.app.ActionBar;
 import androidx.appcompat.app.AppCompatActivity;
 
+import android.net.Uri;
 import android.os.Bundle;
+import android.os.Handler;
+import android.os.Looper;
+import android.os.SystemClock;
 import android.util.Log;
+import android.view.KeyEvent;
 import android.view.View;
+import android.webkit.WebResourceRequest;
+import android.webkit.WebResourceResponse;
+import android.webkit.WebView;
+import android.webkit.WebViewClient;
 import android.widget.TextView;
 
 import com.example.jnitest1.databinding.ActivityMainBinding;
 
+import java.io.ByteArrayInputStream;
 import java.io.File;
 
 public class MainActivity extends AppCompatActivity {
@@ -19,46 +31,84 @@ public class MainActivity extends AppCompatActivity {
     }
 
     private ActivityMainBinding binding;
+    private WebView mWebView;
 
     @Override
     protected void onCreate(Bundle savedInstanceState) {
         super.onCreate(savedInstanceState);
 
+        ActionBar actionBar = getSupportActionBar();
+        if (actionBar != null) {
+            actionBar.hide();
+        }
+
         binding = ActivityMainBinding.inflate(getLayoutInflater());
         setContentView(binding.getRoot());
 
         // Example of a call to a native method
-        TextView tv = binding.sampleText;
-        tv.setText(stringFromJNI());
 
-        tv.setOnClickListener(new View.OnClickListener() {
+        File externalFilesDir = getExternalFilesDir(null);
+        assert externalFilesDir != null;
+        Log.e("myTag", "externalFilesDir: " + externalFilesDir.getAbsolutePath());
+        final WebView webView = new WebView(MainActivity.this);
+        mWebView = webView;
+        webView.getSettings().setJavaScriptEnabled(true);
+        webView.setWebViewClient(new WebViewClient() {
+            @Nullable
             @Override
-            public void onClick(View view) {
-                Log.e("myTag", stringFromJNI());
+            public WebResourceResponse shouldInterceptRequest(WebView view, WebResourceRequest request) {
+                String url = null;
+                Uri uri = request.getUrl();
+                if (uri != null) {
+                    url = uri.toString();
+                }
+
+                if (url != null && (url.endsWith(".js") || url.endsWith(".css"))) {
+                    long start = SystemClock.uptimeMillis();
+                    Response response = LocalCDNService.sendRequest(new Request(url, request.getRequestHeaders()));
+                    long cost = SystemClock.uptimeMillis() - start;
+                    if (response != null) {
+                        Log.e("myTag", "hit localCDN : " + cost + " fetchType=" + response.headers.get("fetchType") + " byteLen=" + response.bytes.length + " " + url);
+                        boolean isCss = url.endsWith(".css");
+                        String mimeType = isCss ? "text/css" : "text/javascript";
+                        WebResourceResponse webResourceResponse = new WebResourceResponse(mimeType, "UTF-8", new ByteArrayInputStream(response.bytes));
+                        webResourceResponse.setResponseHeaders(response.headers);
+                    }
+                }
+                return super.shouldInterceptRequest(view, request);
             }
         });
 
-        File externalFilesDir = this.getExternalFilesDir(null);
-        Log.e("myTag", "externalFilesDir: " + externalFilesDir.getAbsolutePath());
-        new Thread("test") {
+        binding.button.setOnClickListener(new View.OnClickListener() {
             @Override
-            public void run() {
-                setUpStorage(externalFilesDir.getAbsolutePath() + "/");
+            public void onClick(View view) {
+                new Thread("test") {
+                    @Override
+                    public void run() {
+                        setUpStorage(externalFilesDir.getAbsolutePath() + "/cache/");
+                        new Handler(Looper.getMainLooper()).post(new Runnable() {
+                            @Override
+                            public void run() {
+                                webView.loadUrl("https://main.m.taobao.com/");
+                                setContentView(webView);
+                            }
+                        });
+                    }
+                }.start();
             }
-        }.start();
+        });
+    }
 
-//        new Thread() {
-//            @Override
-//            public void run() {
-//                Request request = new Request("https://www.baidu.com/", null);
-//                Response response = Network.sendRequest(request);
-//                if (response != null) {
-//                    Log.e("myTag", response.statusCode);
-//                    Log.e("myTag", response.headers.toString());
-//                    Log.e("myTag", new String(response.bytes));
-//                }
-//            }
-//        }.start();
+    @Override
+    public boolean onKeyDown(int keyCode, KeyEvent event) {
+        if (keyCode == KeyEvent.KEYCODE_BACK) {
+            WebView webView = mWebView;
+            if (webView != null && webView.canGoBack()) {
+                webView.goBack();
+                return true;
+            }
+        }
+        return super.onKeyDown(keyCode, event);
     }
 
     /**

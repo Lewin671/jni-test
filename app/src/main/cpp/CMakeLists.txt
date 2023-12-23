@@ -37,8 +37,8 @@ add_library(${CMAKE_PROJECT_NAME} SHARED
         native-lib.cpp
         utils.h
         utils.cpp
-        sendRequest.h
-        sendRequest.cpp
+        LocalCDNService.h
+        LocalCDNService.cpp
         jvm.h
         jvm.cpp
         network.h

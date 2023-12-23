@@ -19,9 +19,13 @@ class ResourceConfig {
 private:
     // 总的配置文件
     std::string rootDir;
+public:
+    const std::string &getRootDir() const;
+
+private:
     std::string configPath;
     std::unordered_map<std::string, std::shared_ptr<ResourceItem>> resourceItems;
-    ThreadPool threadPool{5};
+    ThreadPool threadPool{1};
     static ResourceConfig *GLOBAL_CONFIG;
 
     bool endsWith(const std::string &str, const std::string &suffix) {
@@ -31,12 +35,12 @@ private:
     }
 
     ResourceConfig(std::string &rootDir) {
-        this->rootDir = rootDir;
         if (endsWith(rootDir, "/")) {
-            this->configPath = rootDir + "config";
+            this->rootDir = rootDir;
         } else {
-            this->configPath = rootDir + "/config";
+            this->rootDir = rootDir + "/";
         }
+        this->configPath = rootDir + "config";
 
         loadThis();
     }
@@ -45,12 +49,19 @@ public:
 
     static void setUp(std::string &rootDir) {
         GLOBAL_CONFIG = new ResourceConfig(rootDir);
-        std::shared_ptr<Request> request = std::make_shared<Request>();
-        request->url = "https://www.baidu.com/";
 
-        auto response = Network::sendRequest(request);
-        utils::log(response->statusCode);
-        utils::log(response->data);
+//        std::string url = "https://www.baidu.com/";
+//        std::unordered_map<std::string, std::string> headers;
+//        headers["test"] = "a";
+//        headers["tes11t"] = "abc";
+//
+//        std::shared_ptr<Request> request = std::make_shared<Request>(url, headers);
+//        auto response = Network::sendRequest(request);
+//        utils::log(response->statusCode);
+//        utils::log(response->data);
+//        for (const auto &item: response->headers) {
+//            utils::log(item.first + "," + item.second);
+//        }
     }
 
     static ResourceConfig *getInstance() {
@@ -76,7 +87,19 @@ public:
         });
     }
 
+    void removeResourceItem(std::string &url) {
+        std::string urlWithoutPrefix = utils::removePrefix(url);
+        resourceItems.erase(urlWithoutPrefix);
+        threadPool.enqueue([=] {
+            serializeThis();
+        });
+    }
+
     void serializeThis() {
+        if (rootDir.empty()) {
+            return;
+        }
+        utils::create_directories_if_not_exists(rootDir);
         std::ofstream file(configPath);
         if (!file.is_open()) {
             throw std::runtime_error("Unable to open file: " + configPath);
