@@ -25,6 +25,7 @@ std::shared_ptr<Response> LocalCDNService::sendRequest(const std::shared_ptr<Req
     if (networkResponse->statusCode == "200") {
         networkResponse->headers["fetchType"] = "network";
         DiskCache::write(request->url, packageName, packageVersion, networkResponse->data);
+        return networkResponse;
     } else {
         utils::log("unexpected status code: " + networkResponse->statusCode);
     }
