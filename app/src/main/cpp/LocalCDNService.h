@@ -6,8 +6,10 @@
 #define JNITEST1_LOCALCDNSERVICE_H
 
 #include "network.h"
+#include "disk-cache.h"
 
 class LocalCDNService {
+
 public:
     static std::shared_ptr<Response> sendRequest(const std::shared_ptr<Request> request);
 };

@@ -6,7 +6,32 @@
 #include "ResourceConfig.h"
 #include <unordered_map>
 
+std::string packageName = "app-001";
+std::string packageVersion = "001";
+
 std::shared_ptr<Response> LocalCDNService::sendRequest(const std::shared_ptr<Request> request) {
+    auto diskContent = DiskCache::read(request->url, packageName, packageVersion);
+    if (!diskContent.empty()) {
+        std::unordered_map<std::string, std::string> headers;
+        headers["fetchType"] = "disk";
+        return std::make_shared<Response>("200", headers, diskContent);
+    }
+
+    auto networkResponse = Network::sendRequest(request);
+    if (networkResponse == nullptr) {
+        return nullptr;
+    }
+
+    if (networkResponse->statusCode == "200") {
+        networkResponse->headers["fetchType"] = "network";
+        DiskCache::write(request->url, packageName, packageVersion, networkResponse->data);
+    } else {
+        utils::log("unexpected status code: " + networkResponse->statusCode);
+    }
+    return nullptr;
+}
+
+std::shared_ptr<Response> sendRequest1(const std::shared_ptr<Request> request) {
     if (ResourceConfig::getInstance()->getRootDir().empty()) {
         return nullptr;
     }

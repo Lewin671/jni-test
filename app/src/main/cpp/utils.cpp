@@ -141,3 +141,10 @@ long utils::getCurrentTimeMilliSeconds() {
     );
     return ms.count();
 }
+
+std::string utils::makePath(const std::string &baseDir, const std::string &fileName) {
+    fs::path dir = baseDir;
+    fs::path file = fileName;
+
+    return dir / file;
+}

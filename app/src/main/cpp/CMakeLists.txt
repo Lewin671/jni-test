@@ -43,6 +43,10 @@ add_library(${CMAKE_PROJECT_NAME} SHARED
         jvm.cpp
         network.h
         network.cpp
+        disk-cache.h
+        disk-cache.cpp
+        file.h
+        file.cpp
         )
 
 # Specifies libraries CMake should link to your target library. You

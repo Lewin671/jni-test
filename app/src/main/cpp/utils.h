@@ -39,6 +39,8 @@ public:
 
     static long getCurrentTimeMilliSeconds();
 
+    static std::string makePath(const std::string &baseDir, const std::string &fileName);
+
 };
 
 
